@@ -5,6 +5,8 @@ import com.joshrotenberg.springbatchimageprocessing.model.Image;
 import com.joshrotenberg.springbatchimageprocessing.processor.ImageItemProcessor;
 import com.joshrotenberg.springbatchimageprocessing.reader.ImageItemReader;
 import com.joshrotenberg.springbatchimageprocessing.writer.ConsoleItemWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -21,16 +23,19 @@ import org.springframework.core.io.Resource;
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration {
+    private static final Logger log = LoggerFactory.getLogger(BatchConfiguration.class);
+
+    @Value("${batch.input:images/*/*}")
+    private Resource[] inputResources;
+
+    @Value("${batch.chunksize:20}")
+    private Integer chunkSize;
 
     @Autowired
     public JobBuilderFactory jobBuilderFactory;
 
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
-
-//    @Value("images/*/*.jpg")
-    @Value("images/n02086240-Shih-Tzu/*8.jpg")
-    private Resource[] inputResources;
 
     @Bean
     public ImageItemReader reader() {
@@ -59,7 +64,7 @@ public class BatchConfiguration {
     @Bean
     public Step step(MultiResourceItemReader<Image> reader, ImageItemProcessor processor, ConsoleItemWriter writer) {
         return stepBuilderFactory.get("imageStep")
-                .<Image, Image>chunk(20)
+                .<Image, Image>chunk(chunkSize)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)

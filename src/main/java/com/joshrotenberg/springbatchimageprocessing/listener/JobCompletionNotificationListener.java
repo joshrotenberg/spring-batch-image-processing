@@ -15,6 +15,10 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
 
     @Autowired
     public JobCompletionNotificationListener() {
+    }
+
+    @Override
+    public void beforeJob(JobExecution execution) {
 
     }
 

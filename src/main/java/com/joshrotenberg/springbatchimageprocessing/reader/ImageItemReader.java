@@ -24,6 +24,7 @@ public class ImageItemReader extends AbstractItemCountingItemStreamItemReader<Im
 
     @Override
     protected void doOpen() throws Exception {
+        log.debug("Opening resource " + resource.getFilename());
         read = false;
     }
 
@@ -32,15 +33,21 @@ public class ImageItemReader extends AbstractItemCountingItemStreamItemReader<Im
         if (read) {
             return null;
         }
+        File file = resource.getFile();
 
-        log.info("Reading " + resource.getFilename());
+        if (!file.exists() || file.isDirectory()) {
+            log.debug("Skipping resource: " + resource.getFilename());
+            return null;
+        }
+
+        log.debug("Reading " + resource.getFilename());
 
         Image image = new Image(resource.getFilename());
-        File file = resource.getFile();
         FileInputStream fileInputStreamReader = new FileInputStream(file);
 
         byte[] bytes = new byte[(int) file.length()];
         int l = fileInputStreamReader.read(bytes);
+        image.setLength(l);
         image.setContent(bytes);
         image.setPath(file.getPath());
 
@@ -50,12 +57,13 @@ public class ImageItemReader extends AbstractItemCountingItemStreamItemReader<Im
 
     @Override
     protected void doClose() {
+        log.debug("Closing resource " + resource.getFilename());
         read = false;
     }
 
     @Override
     public void setResource(Resource resource) {
-        log.info("Set resource to " + resource.getFilename());
+        log.debug("Set resource to " + resource.getFilename());
         this.resource = resource;
     }
 }

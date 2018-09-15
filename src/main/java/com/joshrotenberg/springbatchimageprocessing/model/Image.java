@@ -1,9 +1,19 @@
 package com.joshrotenberg.springbatchimageprocessing.model;
 
+import com.google.gson.annotations.Expose;
+
 public class Image {
+    @Expose
     private String path;
+    @Expose
     private String base64Encoding;
     private byte[] content;
+    @Expose
+    private long length;
+
+    public Image() {
+
+    }
 
     public Image(String path) {
         this.path = path;
@@ -31,6 +41,14 @@ public class Image {
 
     public void setContent(byte[] content) {
         this.content = content;
+    }
+
+    public long getLength() {
+        return length;
+    }
+
+    public void setLength(long length) {
+        this.length = length;
     }
 
     @Override

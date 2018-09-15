@@ -10,9 +10,10 @@ import java.util.Base64;
 public class ImageItemProcessor  implements ItemProcessor<Image, Image> {
     private static final Logger log = LoggerFactory.getLogger(ImageItemProcessor.class);
 
+    // This could probably just get done in the reader instead.
     @Override
     public Image process(final Image image) throws Exception {
-        log.info("processing " + image);
+        log.debug("Processing " + image.getPath());
         image.setBase64Encoding(Base64.getEncoder().encodeToString(image.getContent()));
 
         return image;
