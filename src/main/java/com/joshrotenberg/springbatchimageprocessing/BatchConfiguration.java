@@ -3,7 +3,6 @@ package com.joshrotenberg.springbatchimageprocessing;
 import com.joshrotenberg.springbatchimageprocessing.listener.JobCompletionNotificationListener;
 import com.joshrotenberg.springbatchimageprocessing.model.Image;
 import com.joshrotenberg.springbatchimageprocessing.processor.ImageItemProcessor;
-import com.joshrotenberg.springbatchimageprocessing.reader.ImageItemReader;
 import com.joshrotenberg.springbatchimageprocessing.writer.ConsoleItemWriter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,20 +12,28 @@ import org.springframework.batch.core.configuration.annotation.EnableBatchProces
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
-import org.springframework.batch.item.file.MultiResourceItemReader;
+import org.springframework.batch.item.support.IteratorItemReader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.task.TaskExecutor;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.stream.Stream;
 
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration {
     private static final Logger log = LoggerFactory.getLogger(BatchConfiguration.class);
 
-    @Value("${batch.input:images/*/*}")
-    private Resource[] inputResources;
+    @Value("${batch.input:images/}")
+    private String inputResources;
 
     @Value("${batch.chunksize:20}")
     private Integer chunkSize;
@@ -38,8 +45,13 @@ public class BatchConfiguration {
     public StepBuilderFactory stepBuilderFactory;
 
     @Bean
-    public ImageItemReader reader() {
-        return new ImageItemReader();
+    public IteratorItemReader<Path> itemReader() throws IOException {
+        ClassPathResource resource = new ClassPathResource(inputResources);
+        Stream<Path> sp = Files.walk(Paths.get(resource.getFile().getAbsolutePath()));
+        Iterator<Path> iterator = sp.filter(path -> Files.isRegularFile(path) && Files.isReadable(path))
+                .iterator();
+
+        return new IteratorItemReader<>(iterator);
     }
 
     @Bean
@@ -48,36 +60,27 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public ConsoleItemWriter writer() {
-        return new ConsoleItemWriter();
+    public ConsoleItemWriter<Image> writer() {
+        return new ConsoleItemWriter<>();
     }
 
     @Bean
-    public MultiResourceItemReader<Image> multiResourceItemReader() {
-        MultiResourceItemReader<Image> resourceItemReader = new MultiResourceItemReader<>();
-        resourceItemReader.setResources(inputResources);
-        resourceItemReader.setDelegate(reader());
-        resourceItemReader.setName("readImages");
-        return resourceItemReader;
-    }
-
-    @Bean
-    public Step step(MultiResourceItemReader<Image> reader, ImageItemProcessor processor, ConsoleItemWriter writer) {
+    public Step step(IteratorItemReader<Path> itemReader, ImageItemProcessor processor, ConsoleItemWriter writer, TaskExecutor taskExecutor) {
         return stepBuilderFactory.get("imageStep")
-                .<Image, Image>chunk(chunkSize)
-                .reader(reader)
+                .<Path, Image>chunk(chunkSize)
+                .reader(itemReader)
                 .processor(processor)
                 .writer(writer)
                 .build();
     }
 
     @Bean
-    public Job job(JobCompletionNotificationListener listener, Step step1) {
+    public Job job(JobCompletionNotificationListener listener, Step step) {
 
         return jobBuilderFactory.get("imageJob")
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
-                .flow(step1)
+                .flow(step)
                 .end()
                 .build();
     }

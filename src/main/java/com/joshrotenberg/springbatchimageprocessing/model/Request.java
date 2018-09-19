@@ -2,10 +2,11 @@ package com.joshrotenberg.springbatchimageprocessing.model;
 
 import com.google.gson.annotations.Expose;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Request {
+public class Request implements Serializable {
     @Expose
     private List<Image> images;
 

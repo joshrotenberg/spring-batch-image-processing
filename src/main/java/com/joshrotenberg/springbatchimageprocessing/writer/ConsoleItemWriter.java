@@ -13,7 +13,7 @@ import org.springframework.batch.item.ItemWriter;
 
 import java.util.List;
 
-public class ConsoleItemWriter implements ItemWriter<Image>, StepExecutionListener {
+public class ConsoleItemWriter<T> implements ItemWriter<T>, StepExecutionListener {
     private static final Logger log = LoggerFactory.getLogger(ConsoleItemWriter.class);
 
     private Gson gson;
@@ -34,11 +34,11 @@ public class ConsoleItemWriter implements ItemWriter<Image>, StepExecutionListen
     }
 
     @Override
-    public void write(List<? extends Image> images) throws Exception {
+    public void write(List<? extends T> list) throws Exception {
         Request r = new Request();
-        for (Image image : images) {
-            r.addImage(image);
+        for (T item : list) {
+            r.addImage((Image) item);
         }
-        log.info("Created request: " + gson.toJson(r));
+        log.info(gson.toJson(r));
     }
 }

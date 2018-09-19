@@ -2,29 +2,24 @@ package com.joshrotenberg.springbatchimageprocessing.model;
 
 import com.google.gson.annotations.Expose;
 
-public class Image {
+import java.io.Serializable;
+
+public class Image implements Serializable {
     @Expose
-    private String path;
+    private String name;
     @Expose
     private String base64Encoding;
-    private byte[] content;
-    @Expose
-    private long length;
 
     public Image() {
 
     }
 
-    public Image(String path) {
-        this.path = path;
+    public String getName() {
+        return name;
     }
 
-    public String getPath() {
-        return path;
-    }
-
-    public void setPath(String path) {
-        this.path = path;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getBase64Encoding() {
@@ -35,26 +30,10 @@ public class Image {
         this.base64Encoding = base64Encoding;
     }
 
-    public byte[] getContent() {
-        return content;
-    }
-
-    public void setContent(byte[] content) {
-        this.content = content;
-    }
-
-    public long getLength() {
-        return length;
-    }
-
-    public void setLength(long length) {
-        this.length = length;
-    }
-
     @Override
     public String toString() {
         return "Image{" +
-                "path='" + path + '\'' +
+                "name='" + name + '\'' +
                 ", base64Encoding='" + base64Encoding + '\'' +
                 '}';
     }
